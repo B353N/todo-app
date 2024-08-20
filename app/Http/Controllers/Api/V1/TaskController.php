@@ -7,6 +7,7 @@ use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
 use App\Http\Resources\TaskResource;
 use App\Models\Task;
+use Illuminate\Support\Facades\Gate;
 
 class TaskController extends Controller
 {
@@ -16,7 +17,7 @@ class TaskController extends Controller
     public function index()
     {
         // Get all task from resource
-        $tasks = TaskResource::collection(Task::all());
+        $tasks = TaskResource::collection(auth()->user()->tasks()->get());
 
         return $tasks;
     }
@@ -27,7 +28,7 @@ class TaskController extends Controller
     public function store(StoreTaskRequest $request)
     {
         // Create Task
-        $task = Task::create($request->validated());
+        $task = auth()->user()->tasks()->create($request->validated());
 
         return TaskResource::make($task);
     }
@@ -37,6 +38,9 @@ class TaskController extends Controller
      */
     public function show(Task $task)
     {
+        // Gate check
+        Gate::authorize('view', $task);
+
         // Get task from resource
         $task = TaskResource::make($task);
 
@@ -48,10 +52,13 @@ class TaskController extends Controller
      */
     public function update(UpdateTaskRequest $request, Task $task)
     {
-        // Update Task
-        $updatedTask = $task->update($request->validated());
+        // Gate check
+        Gate::authorize('update', $task);
 
-        return TaskResource::make($updatedTask);
+        // Update Task
+        $task->update($request->validated());
+
+        return TaskResource::make($task);
     }
 
     /**
@@ -59,6 +66,9 @@ class TaskController extends Controller
      */
     public function destroy(Task $task)
     {
+        // Gate check
+        Gate::authorize('delete', $task);
+
         // Delete Task
         $task->delete();
 
