@@ -16,6 +16,9 @@ class TaskController extends Controller
      */
     public function index()
     {
+        // Gate check
+        Gate::authorize('viewAny', Task::class);
+
         // Get all task from resource
         $tasks = TaskResource::collection(auth()->user()->tasks()->get());
 
@@ -53,7 +56,12 @@ class TaskController extends Controller
     public function update(UpdateTaskRequest $request, Task $task)
     {
         // Gate check
-        Gate::authorize('update', $task);
+        if($request->user()->cannot('update', $task)) {
+            return $this->responseWithError(
+                'You are not authorized to update this task.',
+                'NOT_AUTHORIZE',
+                403);
+        }
 
         // Update Task
         $task->update($request->validated());
