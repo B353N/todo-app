@@ -30,6 +30,9 @@ class TaskController extends Controller
      */
     public function store(StoreTaskRequest $request)
     {
+        // Gate check
+        Gate::authorize('create', Task::class);
+
         // Create Task
         $task = auth()->user()->tasks()->create($request->validated());
 
